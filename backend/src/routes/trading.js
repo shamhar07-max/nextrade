@@ -1,6 +1,5 @@
 // src/routes/trading.js
 const express = require('express');
-const { v4: uuidv4 } = require('uuid');
 const { body, validationResult } = require('express-validator');
 const { getDb } = require('../db/database');
 const { authenticateToken } = require('../middleware/auth');
@@ -67,7 +66,7 @@ router.post('/order', authenticateToken, [
     return res.status(400).json({ success: false, message: 'Insufficient margin', required: requiredMargin, available: account.free_margin });
   }
 
-  const posId = uuidv4();
+  const posId = crypto.randomUUID();
   const status = orderType === 'market' ? 'open' : 'pending';
 
   db.prepare(`INSERT INTO positions (id, account_id, symbol, direction, volume, open_price, current_price, stop_loss, take_profit, order_type, status)
@@ -111,7 +110,7 @@ router.delete('/position/:id', authenticateToken, (req, res) => {
 
   // Record transaction
   db.prepare('INSERT INTO transactions (id, account_id, type, amount, reference) VALUES (?, ?, ?, ?, ?)')
-    .run(uuidv4(), position.account_id, pl >= 0 ? 'profit' : 'loss', Math.abs(pl), 'POS' + position.id.slice(0, 8).toUpperCase());
+    .run(crypto.randomUUID(), position.account_id, pl >= 0 ? 'profit' : 'loss', Math.abs(pl), 'POS' + position.id.slice(0, 8).toUpperCase());
 
   res.json({ success: true, message: 'Position closed', closePrice, profitLoss: +pl.toFixed(2) });
 });
