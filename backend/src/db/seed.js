@@ -1,7 +1,6 @@
 // src/db/seed.js
 require('dotenv').config();
 const bcrypt = require('bcryptjs');
-const { v4: uuidv4 } = require('uuid');
 const { getDb } = require('./database');
 
 async function seed() {
@@ -9,7 +8,7 @@ async function seed() {
   console.log('🌱 Seeding database...');
 
   // Demo user
-  const userId = uuidv4();
+  const userId = crypto.randomUUID();
   const passwordHash = await bcrypt.hash('Demo1234!', 12);
 
   try {
@@ -31,13 +30,13 @@ async function seed() {
 
 function seedAccounts(db, userId) {
   // Live account
-  const liveAccountId = uuidv4();
+  const liveAccountId = crypto.randomUUID();
   db.prepare(`INSERT OR IGNORE INTO accounts (id, user_id, account_number, account_type, balance, equity, free_margin, leverage)
     VALUES (?, ?, ?, 'standard', 12450.75, 12983.20, 12663.20, 500)`
   ).run(liveAccountId, userId, '102938475');
 
   // Demo account
-  const demoAccountId = uuidv4();
+  const demoAccountId = crypto.randomUUID();
   db.prepare(`INSERT OR IGNORE INTO accounts (id, user_id, account_number, account_type, balance, equity, free_margin, leverage, is_demo)
     VALUES (?, ?, ?, 'standard', 100000.00, 100000.00, 100000.00, 500, 1)`
   ).run(demoAccountId, userId, '102938476');
@@ -52,7 +51,7 @@ function seedAccounts(db, userId) {
   for (const p of positions) {
     db.prepare(`INSERT OR IGNORE INTO positions (id, account_id, symbol, direction, volume, open_price, current_price, stop_loss, take_profit, profit_loss)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
-    ).run(uuidv4(), liveAccountId, p.sym, p.dir, p.vol, p.open, p.curr, p.sl, p.tp, p.pl);
+    ).run(crypto.randomUUID(), liveAccountId, p.sym, p.dir, p.vol, p.open, p.curr, p.sl, p.tp, p.pl);
   }
 
   // Sample transactions
@@ -66,7 +65,7 @@ function seedAccounts(db, userId) {
   for (const t of txns) {
     db.prepare(`INSERT OR IGNORE INTO transactions (id, account_id, type, amount, payment_method, reference)
       VALUES (?, ?, ?, ?, ?, ?)`
-    ).run(uuidv4(), liveAccountId, t.type, t.amount, t.method, t.ref);
+    ).run(crypto.randomUUID(), liveAccountId, t.type, t.amount, t.method, t.ref);
   }
 
   console.log('✅ Accounts, positions, and transactions seeded');
