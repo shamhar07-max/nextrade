@@ -2,7 +2,6 @@
 const express = require('express');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const { v4: uuidv4 } = require('uuid');
 const { body, validationResult } = require('express-validator');
 const { getDb } = require('../db/database');
 const { authenticateToken } = require('../middleware/auth');
@@ -34,9 +33,9 @@ router.post('/register', [
 
   try {
     const passwordHash = await bcrypt.hash(password, 12);
-    const userId = uuidv4();
-    const liveAccountId = uuidv4();
-    const demoAccountId = uuidv4();
+    const userId = crypto.randomUUID();
+    const liveAccountId = crypto.randomUUID();
+    const demoAccountId = crypto.randomUUID();
     const liveAccNum = Math.floor(100000000 + Math.random() * 900000000).toString();
     const demoAccNum = Math.floor(100000000 + Math.random() * 900000000).toString();
 
