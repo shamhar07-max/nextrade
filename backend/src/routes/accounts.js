@@ -1,6 +1,5 @@
 // src/routes/accounts.js
 const express = require('express');
-const { v4: uuidv4 } = require('uuid');
 const { getDb } = require('../db/database');
 const { authenticateToken } = require('../middleware/auth');
 
@@ -38,7 +37,7 @@ router.post('/:id/deposit', authenticateToken, (req, res) => {
   const account = db.prepare('SELECT * FROM accounts WHERE id = ? AND user_id = ?').get(req.params.id, req.user.id);
   if (!account) return res.status(404).json({ success: false, message: 'Account not found' });
 
-  const txId = uuidv4();
+  const txId = crypto.randomUUID();
   const ref = 'DEP' + Date.now().toString(36).toUpperCase();
 
   db.prepare('UPDATE accounts SET balance = balance + ?, free_margin = free_margin + ?, equity = equity + ? WHERE id = ?')
@@ -64,7 +63,7 @@ router.post('/:id/withdraw', authenticateToken, (req, res) => {
   db.prepare('UPDATE accounts SET balance = balance - ?, free_margin = free_margin - ?, equity = equity - ? WHERE id = ?')
     .run(amount, amount, amount, account.id);
   db.prepare('INSERT INTO transactions (id, account_id, type, amount, payment_method, reference, status) VALUES (?, ?, \'withdrawal\', ?, ?, ?, \'pending\')')
-    .run(uuidv4(), account.id, amount, method || 'card', ref);
+    .run(crypto.randomUUID(), account.id, amount, method || 'card', ref);
 
   res.json({ success: true, message: 'Withdrawal request submitted', reference: ref });
 });
