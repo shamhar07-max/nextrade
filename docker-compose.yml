@@ -1,0 +1,56 @@
+version: '3.9'
+
+services:
+  # ─── Backend API ─────────────────────────────────────────────────────────
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: nextrade-backend
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: 4000
+      JWT_SECRET: ${JWT_SECRET:-change_this_to_a_random_256bit_secret_in_production}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-7d}
+      DB_PATH: /app/data/nextrade.db
+      ALLOWED_ORIGINS: http://localhost,http://localhost:80,https://${DOMAIN:-localhost}
+      PRICE_UPDATE_INTERVAL: ${PRICE_UPDATE_INTERVAL:-1500}
+      RATE_LIMIT_WINDOW_MS: 900000
+      RATE_LIMIT_MAX: 200
+    volumes:
+      - nextrade_db:/app/data
+    networks:
+      - nextrade_net
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:4000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+
+  # ─── Frontend + Nginx ────────────────────────────────────────────────────
+  nginx:
+    image: nginx:1.25-alpine
+    container_name: nextrade-nginx
+    restart: unless-stopped
+    ports:
+      - "${HTTP_PORT:-80}:80"
+      - "${HTTPS_PORT:-443}:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./frontend/dist:/usr/share/nginx/html:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - nextrade_net
+
+volumes:
+  nextrade_db:
+    driver: local
+
+networks:
+  nextrade_net:
+    driver: bridge

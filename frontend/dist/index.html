@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NexTrade — Professional Trading Platform</title>
+<meta name="description" content="Professional forex and CFD trading platform">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%2300d4aa'/><text y='22' x='6' font-size='18' font-weight='700' fill='%23000'>N</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=DM+Mono:wght@400;500&family=Sora:wght@300;400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+
+<!-- AUTH SCREENS -->
+<div id="authScreen" class="auth-screen">
+  <div class="auth-bg">
+    <div class="auth-bg-grid"></div>
+    <div class="auth-bg-glow"></div>
+  </div>
+  <div class="auth-panel">
+    <div class="auth-logo">
+      <div class="logo-mark">N</div>
+      <span class="logo-text">NexTrade</span>
+    </div>
+
+    <!-- LOGIN FORM -->
+    <div id="loginForm" class="auth-form active">
+      <div class="auth-title">Welcome back</div>
+      <div class="auth-sub">Sign in to your trading account</div>
+      <div id="loginError" class="auth-error hidden"></div>
+      <div class="field-group">
+        <label class="field-label">Email</label>
+        <input class="field-input" type="email" id="loginEmail" placeholder="you@example.com" autocomplete="email">
+      </div>
+      <div class="field-group">
+        <label class="field-label">Password</label>
+        <input class="field-input" type="password" id="loginPassword" placeholder="••••••••" autocomplete="current-password">
+      </div>
+      <button class="btn-primary" id="loginBtn" onclick="doLogin()">Sign In</button>
+      <div class="auth-demo">
+        <button class="btn-demo" onclick="demoLogin()">🎯 Use Demo Credentials</button>
+      </div>
+      <div class="auth-switch">Don't have an account? <a href="#" onclick="showForm('registerForm')">Create account</a></div>
+    </div>
+
+    <!-- REGISTER FORM -->
+    <div id="registerForm" class="auth-form">
+      <div class="auth-title">Create account</div>
+      <div class="auth-sub">Start trading in minutes</div>
+      <div id="registerError" class="auth-error hidden"></div>
+      <div class="field-row">
+        <div class="field-group"><label class="field-label">First Name</label><input class="field-input" id="regFirst" placeholder="John"></div>
+        <div class="field-group"><label class="field-label">Last Name</label><input class="field-input" id="regLast" placeholder="Doe"></div>
+      </div>
+      <div class="field-group"><label class="field-label">Email</label><input class="field-input" type="email" id="regEmail" placeholder="you@example.com"></div>
+      <div class="field-group"><label class="field-label">Password <span style="color:var(--text3);font-weight:400">(min 8 chars, 1 uppercase, 1 number)</span></label><input class="field-input" type="password" id="regPassword" placeholder="••••••••"></div>
+      <div class="field-group"><label class="field-label">Country</label>
+        <select class="field-input" id="regCountry">
+          <option value="AE">United Arab Emirates</option>
+          <option value="US">United States</option>
+          <option value="GB">United Kingdom</option>
+          <option value="SA">Saudi Arabia</option>
+          <option value="IN">India</option>
+          <option value="SG">Singapore</option>
+          <option value="AU">Australia</option>
+          <option value="CA">Canada</option>
+          <option value="DE">Germany</option>
+          <option value="FR">France</option>
+          <option value="OTHER">Other</option>
+        </select>
+      </div>
+      <button class="btn-primary" onclick="doRegister()">Create Account</button>
+      <div class="auth-switch">Already have an account? <a href="#" onclick="showForm('loginForm')">Sign in</a></div>
+    </div>
+  </div>
+  <div class="auth-features">
+    <div class="af-item"><span class="af-icon">⚡</span><div><strong>Ultra-fast execution</strong><br>Orders filled in milliseconds</div></div>
+    <div class="af-item"><span class="af-icon">🔒</span><div><strong>Bank-grade security</strong><br>2FA + encrypted storage</div></div>
+    <div class="af-item"><span class="af-icon">📊</span><div><strong>30+ instruments</strong><br>Forex, Crypto, Metals, Indices</div></div>
+    <div class="af-item"><span class="af-icon">💸</span><div><strong>Instant withdrawals</strong><br>98% processed automatically</div></div>
+  </div>
+</div>
+
+<!-- MAIN APP (hidden until logged in) -->
+<div id="appShell" class="app hidden">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="logo-wrap">
+        <div class="logo-mark sm">N</div>
+        <span class="logo-text sm">NexTrade</span>
+      </div>
+    </div>
+
+    <!-- Account switcher -->
+    <div class="account-switcher" id="accountSwitcher">
+      <div class="as-label">Account</div>
+      <select class="as-select" id="accountSelect" onchange="switchAccount(this.value)"></select>
+    </div>
+
+    <!-- Account summary -->
+    <div class="sidebar-summary" id="sidebarSummary">
+      <div class="ss-row"><span class="ss-label">Balance</span><span class="ss-val" id="ss-balance">—</span></div>
+      <div class="ss-row"><span class="ss-label">Equity</span><span class="ss-val green" id="ss-equity">—</span></div>
+      <div class="ss-row"><span class="ss-label">Margin</span><span class="ss-val" id="ss-margin">—</span></div>
+      <div class="ss-row"><span class="ss-label">Free Margin</span><span class="ss-val gold" id="ss-free">—</span></div>
+      <div class="ss-row"><span class="ss-label">Margin Level</span><span class="ss-val green" id="ss-level">—</span></div>
+    </div>
+
+    <!-- Nav -->
+    <nav class="sidebar-nav">
+      <div class="nav-section-label">Trading</div>
+      <div class="nav-item active" data-page="terminal" onclick="navigate('terminal',this)">
+        <svg class="nav-icon" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="m7 8 4 4-4 4M13 16h4"/></svg>
+        Terminal
+      </div>
+      <div class="nav-item" data-page="markets" onclick="navigate('markets',this)">
+        <svg class="nav-icon" viewBox="0 0 24 24"><path d="M3 17l4-8 4 4 4-6 4 6"/><path d="M3 21h18"/></svg>
+        Markets
+        <span class="nav-badge" id="nav-markets-badge">30</span>
+      </div>
+      <div class="nav-section-label">Account</div>
+      <div class="nav-item" data-page="dashboard" onclick="navigate('dashboard',this)">
+        <svg class="nav-icon" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+        Dashboard
+      </div>
+      <div class="nav-item" data-page="history" onclick="navigate('history',this)">
+        <svg class="nav-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 15"/></svg>
+        History
+      </div>
+      <div class="nav-item" data-page="wallet" onclick="navigate('wallet',this)">
+        <svg class="nav-icon" viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M16 12h2"/></svg>
+        Wallet
+      </div>
+      <div class="nav-item" data-page="account" onclick="navigate('account',this)">
+        <svg class="nav-icon" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+        Account
+      </div>
+    </nav>
+
+    <!-- Watchlist -->
+    <div class="sidebar-watchlist">
+      <div class="wl-header">
+        <span class="nav-section-label" style="padding:0">Watchlist</span>
+        <input class="wl-search" placeholder="Search…" oninput="filterWatchlist(this.value)">
+      </div>
+      <div class="wl-list" id="watchlistEl"></div>
+    </div>
+
+    <div class="sidebar-footer">
+      <button class="sf-btn" onclick="doLogout()">
+        <svg viewBox="0 0 24 24" class="nav-icon"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        Logout
+      </button>
+      <div class="sf-user" id="sfUser"></div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="main-wrap">
+
+    <!-- TOP BAR -->
+    <header class="topbar">
+      <div class="tb-left">
+        <div class="tb-symbol" id="tb-symbol">EUR/USD</div>
+        <div class="tb-price" id="tb-price">—</div>
+        <div class="tb-change" id="tb-change">—</div>
+        <div class="tb-stats" id="tb-stats">
+          <div class="tb-stat"><span class="tbs-label">Spread</span><span class="tbs-val" id="tbs-spread">—</span></div>
+          <div class="tb-stat"><span class="tbs-label">High</span><span class="tbs-val" id="tbs-high">—</span></div>
+          <div class="tb-stat"><span class="tbs-label">Low</span><span class="tbs-val" id="tbs-low">—</span></div>
+          <div class="tb-stat"><span class="tbs-label">Volume</span><span class="tbs-val" id="tbs-vol">—</span></div>
+        </div>
+      </div>
+      <div class="tb-right">
+        <button class="btn-dep" onclick="openModal('depositModal')">+ Deposit</button>
+        <button class="btn-buy-quick" onclick="quickOrder('buy')">Buy</button>
+        <button class="btn-sell-quick" onclick="quickOrder('sell')">Sell</button>
+        <div class="tb-avatar" id="tb-avatar" onclick="navigate('account',document.querySelector('[data-page=account]'))">JD</div>
+      </div>
+    </header>
+
+    <!-- TICKER -->
+    <div class="ticker-bar"><div class="ticker-inner" id="tickerInner"></div></div>
+
+    <!-- PAGES -->
+    <div class="pages-wrap">
+
+      <!-- TERMINAL PAGE -->
+      <div class="page active" id="page-terminal">
+        <div class="terminal-layout">
+
+          <!-- CHART AREA -->
+          <div class="chart-area">
+            <div class="chart-toolbar">
+              <span class="chart-sym" id="chart-sym">EURUSD</span>
+              <div class="chart-sep"></div>
+              <div class="tf-group">
+                <button class="tf-btn" onclick="setTimeframe('1M',this)">1M</button>
+                <button class="tf-btn" onclick="setTimeframe('5M',this)">5M</button>
+                <button class="tf-btn" onclick="setTimeframe('15M',this)">15M</button>
+                <button class="tf-btn" onclick="setTimeframe('1H',this)">1H</button>
+                <button class="tf-btn active" onclick="setTimeframe('4H',this)">4H</button>
+                <button class="tf-btn" onclick="setTimeframe('1D',this)">1D</button>
+                <button class="tf-btn" onclick="setTimeframe('1W',this)">1W</button>
+              </div>
+              <div class="chart-sep"></div>
+              <button class="ct-btn active" id="ct-candle" onclick="setChartType('candle',this)" title="Candlestick">
+                <svg viewBox="0 0 20 20"><rect x="3" y="6" width="4" height="8"/><line x1="5" y1="3" x2="5" y2="6"/><line x1="5" y1="14" x2="5" y2="17"/><rect x="10" y="4" width="4" height="9"/><line x1="12" y1="2" x2="12" y2="4"/><line x1="12" y1="13" x2="12" y2="18"/></svg>
+              </button>
+              <button class="ct-btn" id="ct-line" onclick="setChartType('line',this)" title="Line">
+                <svg viewBox="0 0 20 20"><polyline points="2 14 6 8 10 12 14 6 18 10"/></svg>
+              </button>
+              <div class="chart-spacer"></div>
+              <div class="chart-ohlc" id="chartOHLC">O — H — L — C —</div>
+            </div>
+            <div class="chart-canvas-wrap" id="chartWrap">
+              <canvas id="mainChart"></canvas>
+            </div>
+          </div>
+
+          <!-- ORDER PANEL -->
+          <div class="order-panel">
+            <div class="op-tabs">
+              <div class="op-tab active" onclick="setOrderType('market',this)">Market</div>
+              <div class="op-tab" onclick="setOrderType('limit',this)">Limit</div>
+              <div class="op-tab" onclick="setOrderType('stop',this)">Stop</div>
+            </div>
+            <div class="op-body">
+              <!-- Direction -->
+              <div class="dir-grid">
+                <div class="dir-btn buy active" id="dirBuy" onclick="setDirection('buy')">
+                  <div class="dir-lbl">Buy</div>
+                  <div class="dir-price green" id="askPrice">—</div>
+                </div>
+                <div class="dir-btn sell" id="dirSell" onclick="setDirection('sell')">
+                  <div class="dir-lbl">Sell</div>
+                  <div class="dir-price red" id="bidPrice">—</div>
+                </div>
+              </div>
+
+              <!-- Symbol selector -->
+              <div class="field-group">
+                <label class="field-label">Symbol</label>
+                <select class="field-input" id="orderSymbol" onchange="onSymbolChange(this.value)"></select>
+              </div>
+
+              <!-- Volume -->
+              <div class="field-group">
+                <label class="field-label">Volume (lots)</label>
+                <div class="vol-input-wrap">
+                  <button class="vol-adj" onclick="adjustVol(-0.01)">−</button>
+                  <input class="field-input vol-input" type="number" id="volInput" value="0.10" min="0.01" max="1000" step="0.01" oninput="updateMarginCalc()">
+                  <button class="vol-adj" onclick="adjustVol(+0.01)">+</button>
+                </div>
+              </div>
+
+              <!-- Limit price (shown for limit/stop orders) -->
+              <div class="field-group" id="limitPriceField" style="display:none">
+                <label class="field-label">Limit Price</label>
+                <input class="field-input" type="number" id="limitPriceInput" step="0.00001" placeholder="0.00000">
+              </div>
+
+              <!-- SL / TP -->
+              <div class="field-row">
+                <div class="field-group">
+                  <label class="field-label">Stop Loss</label>
+                  <input class="field-input" type="number" id="slInput" placeholder="—" step="0.00001">
+                </div>
+                <div class="field-group">
+                  <label class="field-label">Take Profit</label>
+                  <input class="field-input" type="number" id="tpInput" placeholder="—" step="0.00001">
+                </div>
+              </div>
+
+              <!-- Leverage pills -->
+              <div class="field-group">
+                <label class="field-label">Leverage</label>
+                <div class="lev-pills">
+                  <div class="lev-pill" onclick="setLev(this,50)">1:50</div>
+                  <div class="lev-pill" onclick="setLev(this,100)">1:100</div>
+                  <div class="lev-pill active" onclick="setLev(this,500)">1:500</div>
+                  <div class="lev-pill" onclick="setLev(this,1000)">1:1000</div>
+                  <div class="lev-pill" onclick="setLev(this,2000)">1:2000</div>
+                </div>
+              </div>
+
+              <!-- Margin calculator -->
+              <div class="margin-box">
+                <div class="mb-row"><span class="mb-lbl">Required Margin</span><span class="mb-val" id="reqMargin">—</span></div>
+                <div class="mb-row"><span class="mb-lbl">Pip Value</span><span class="mb-val" id="pipVal">—</span></div>
+                <div class="mb-row"><span class="mb-lbl">Spread Cost</span><span class="mb-val" id="spreadCost">—</span></div>
+                <div class="mb-row"><span class="mb-lbl">Commission</span><span class="mb-val">$0.00</span></div>
+              </div>
+
+              <button class="btn-place" id="placeBtn" onclick="placeOrder()">Buy Market</button>
+            </div>
+
+            <!-- Quick account info -->
+            <div class="op-acc-info">
+              <div class="mb-row"><span class="mb-lbl">Open P/L</span><span class="mb-val green" id="op-floating">—</span></div>
+              <div class="mb-row"><span class="mb-lbl">Open Positions</span><span class="mb-val" id="op-count">—</span></div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- POSITIONS TABLE -->
+        <div class="positions-section">
+          <div class="pos-tabs-bar">
+            <div class="pos-tab active" onclick="setPosTab(this,'open')">Open Positions <span class="ptab-badge" id="openPosBadge">0</span></div>
+            <div class="pos-tab" onclick="setPosTab(this,'pending')">Pending Orders</div>
+            <div class="pos-tab" onclick="setPosTab(this,'closed')">Today's Closed</div>
+          </div>
+          <div class="pos-table-wrap" id="posTableWrap">
+            <table class="data-table">
+              <thead>
+                <tr><th>#</th><th>Symbol</th><th>Dir</th><th>Volume</th><th>Open</th><th>Current</th><th>SL</th><th>TP</th><th>Swap</th><th>P/L</th><th>Time</th><th>Actions</th></tr>
+              </thead>
+              <tbody id="positionsBody"></tbody>
+            </table>
+            <div class="table-empty" id="posEmpty">No open positions</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- MARKETS PAGE -->
+      <div class="page" id="page-markets">
+        <div class="page-header">
+          <h1 class="page-title">Markets</h1>
+          <div class="mkt-filters" id="mktFilters">
+            <button class="mf-btn active" onclick="filterMkt('all',this)">All</button>
+            <button class="mf-btn" onclick="filterMkt('forex',this)">Forex</button>
+            <button class="mf-btn" onclick="filterMkt('crypto',this)">Crypto</button>
+            <button class="mf-btn" onclick="filterMkt('metals',this)">Metals</button>
+            <button class="mf-btn" onclick="filterMkt('indices',this)">Indices</button>
+            <button class="mf-btn" onclick="filterMkt('stocks',this)">Stocks</button>
+            <button class="mf-btn" onclick="filterMkt('commodities',this)">Commodities</button>
+          </div>
+        </div>
+        <div class="markets-grid" id="marketsGrid"></div>
+      </div>
+
+      <!-- DASHBOARD PAGE -->
+      <div class="page" id="page-dashboard">
+        <div class="page-header"><h1 class="page-title">Dashboard</h1></div>
+        <div class="dash-grid">
+          <div class="dash-kpi-row" id="dashKPIs"></div>
+          <div class="dash-card dash-chart-card">
+            <div class="dc-title">Equity Curve</div>
+            <div style="position:relative;height:180px"><canvas id="equityChart"></canvas></div>
+          </div>
+          <div class="dash-card">
+            <div class="dc-title">Asset Distribution</div>
+            <div style="position:relative;height:180px"><canvas id="assetChart"></canvas></div>
+          </div>
+          <div class="dash-card dash-full">
+            <div class="dc-title">Monthly P/L</div>
+            <div style="position:relative;height:120px"><canvas id="monthChart"></canvas></div>
+          </div>
+          <div class="dash-card">
+            <div class="dc-title">Win/Loss Ratio</div>
+            <div style="position:relative;height:120px"><canvas id="winLossChart"></canvas></div>
+          </div>
+          <div class="dash-card">
+            <div class="dc-title">Top Instruments</div>
+            <div class="top-instruments" id="topInstruments"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- HISTORY PAGE -->
+      <div class="page" id="page-history">
+        <div class="page-header">
+          <h1 class="page-title">Trade History</h1>
+          <div class="hist-filters">
+            <button class="mf-btn active" onclick="setHistFilter('today',this)">Today</button>
+            <button class="mf-btn" onclick="setHistFilter('week',this)">Week</button>
+            <button class="mf-btn" onclick="setHistFilter('month',this)">Month</button>
+            <button class="mf-btn" onclick="setHistFilter('all',this)">All</button>
+            <button class="btn-ghost-sm" onclick="exportCSV()">Export CSV</button>
+          </div>
+        </div>
+        <div class="hist-summary" id="histSummary"></div>
+        <div class="pos-table-wrap">
+          <table class="data-table">
+            <thead><tr><th>Closed</th><th>Symbol</th><th>Dir</th><th>Volume</th><th>Open</th><th>Close</th><th>SL</th><th>TP</th><th>P/L</th></tr></thead>
+            <tbody id="historyBody"></tbody>
+          </table>
+          <div class="table-empty" id="histEmpty" style="display:none">No closed trades</div>
+        </div>
+      </div>
+
+      <!-- WALLET PAGE -->
+      <div class="page" id="page-wallet">
+        <div class="page-header"><h1 class="page-title">Wallet</h1></div>
+        <div class="wallet-layout">
+          <div class="wallet-hero">
+            <div class="wh-label">Available Balance</div>
+            <div class="wh-amount" id="wh-amount">—</div>
+            <div class="wh-actions">
+              <button class="btn-primary" onclick="openModal('depositModal')">Deposit</button>
+              <button class="btn-outline" onclick="openModal('withdrawModal')">Withdraw</button>
+            </div>
+          </div>
+          <div class="wallet-methods-grid">
+            <div class="wm-card" onclick="openModal('depositModal')">
+              <div class="wm-icon">💳</div>
+              <div class="wm-title">Credit / Debit Card</div>
+              <div class="wm-sub">Instant · Min $10</div>
+            </div>
+            <div class="wm-card" onclick="openModal('depositModal')">
+              <div class="wm-icon">🏦</div>
+              <div class="wm-title">Bank Wire</div>
+              <div class="wm-sub">1-3 days · Min $100</div>
+            </div>
+            <div class="wm-card" onclick="openModal('depositModal')">
+              <div class="wm-icon">₿</div>
+              <div class="wm-title">Crypto (USDT/BTC)</div>
+              <div class="wm-sub">~10 min · Min $20</div>
+            </div>
+            <div class="wm-card" onclick="openModal('depositModal')">
+              <div class="wm-icon">📱</div>
+              <div class="wm-title">E-Wallet</div>
+              <div class="wm-sub">Instant · Min $5</div>
+            </div>
+          </div>
+          <div class="dash-card" style="margin-top:0">
+            <div class="dc-title">Transaction History</div>
+            <table class="data-table" style="margin-top:10px">
+              <thead><tr><th>Date</th><th>Type</th><th>Amount</th><th>Method</th><th>Reference</th><th>Status</th></tr></thead>
+              <tbody id="txnBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ACCOUNT PAGE -->
+      <div class="page" id="page-account">
+        <div class="page-header"><h1 class="page-title">Account Settings</h1></div>
+        <div class="account-layout">
+          <div class="acc-profile-card">
+            <div class="apc-avatar" id="apc-avatar">JD</div>
+            <div class="apc-info">
+              <div class="apc-name" id="apc-name">—</div>
+              <div class="apc-email" id="apc-email">—</div>
+              <div class="apc-badge verified">✓ Verified</div>
+            </div>
+          </div>
+          <div class="acc-grid">
+            <div class="dash-card">
+              <div class="dc-title">Personal Info</div>
+              <div class="acc-form">
+                <div class="field-row">
+                  <div class="field-group"><label class="field-label">First Name</label><input class="field-input" id="pf-first"></div>
+                  <div class="field-group"><label class="field-label">Last Name</label><input class="field-input" id="pf-last"></div>
+                </div>
+                <div class="field-group"><label class="field-label">Email</label><input class="field-input" id="pf-email" disabled></div>
+                <div class="field-group"><label class="field-label">Phone</label><input class="field-input" id="pf-phone" placeholder="+1 234 567 8900"></div>
+                <button class="btn-primary sm" onclick="saveProfile()">Save Changes</button>
+              </div>
+            </div>
+            <div class="dash-card">
+              <div class="dc-title">Security</div>
+              <div class="acc-form">
+                <div class="field-group"><label class="field-label">Current Password</label><input class="field-input" type="password" id="sec-curr"></div>
+                <div class="field-group"><label class="field-label">New Password</label><input class="field-input" type="password" id="sec-new"></div>
+                <div class="field-group"><label class="field-label">Confirm Password</label><input class="field-input" type="password" id="sec-confirm"></div>
+                <button class="btn-primary sm" onclick="changePassword()">Change Password</button>
+              </div>
+            </div>
+            <div class="dash-card">
+              <div class="dc-title">Trading Accounts</div>
+              <div class="acc-accounts-list" id="accAccountsList"></div>
+            </div>
+            <div class="dash-card">
+              <div class="dc-title">KYC / Verification</div>
+              <div class="kyc-status verified">
+                <div class="kyc-icon">✓</div>
+                <div><strong>Identity Verified</strong><br><span style="font-size:12px;color:var(--text3)">Your account is fully verified</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /pages-wrap -->
+  </div><!-- /main-wrap -->
+</div><!-- /appShell -->
+
+<!-- MODALS -->
+<div class="modal-overlay" id="depositModal" onclick="overlayClose(event,'depositModal')">
+  <div class="modal">
+    <div class="modal-hdr">
+      <div class="modal-title">Deposit Funds</div>
+      <button class="modal-close" onclick="closeModal('depositModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-methods">
+        <div class="mm-item active" onclick="selectMethod(this,'card')"><span>💳</span> Credit Card <span class="mm-tag">Instant</span></div>
+        <div class="mm-item" onclick="selectMethod(this,'bank')"><span>🏦</span> Bank Wire <span class="mm-tag">1-3 days</span></div>
+        <div class="mm-item" onclick="selectMethod(this,'crypto')"><span>₿</span> Crypto <span class="mm-tag">~10 min</span></div>
+        <div class="mm-item" onclick="selectMethod(this,'ewallet')"><span>📱</span> E-Wallet <span class="mm-tag">Instant</span></div>
+      </div>
+      <div class="field-group">
+        <label class="field-label">Amount (USD)</label>
+        <input class="field-input" type="number" id="dep-amount" value="500" min="10" step="50">
+      </div>
+      <div class="quick-amounts">
+        <button onclick="setAmt('dep-amount',100)">$100</button>
+        <button onclick="setAmt('dep-amount',500)">$500</button>
+        <button onclick="setAmt('dep-amount',1000)">$1,000</button>
+        <button onclick="setAmt('dep-amount',5000)">$5,000</button>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-outline" onclick="closeModal('depositModal')">Cancel</button>
+      <button class="btn-primary" onclick="doDeposit()">Proceed to Deposit</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="withdrawModal" onclick="overlayClose(event,'withdrawModal')">
+  <div class="modal">
+    <div class="modal-hdr">
+      <div class="modal-title">Withdraw Funds</div>
+      <button class="modal-close" onclick="closeModal('withdrawModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="info-box">⚡ 98% of withdrawals processed automatically within minutes.</div>
+      <div class="modal-methods">
+        <div class="mm-item active" onclick="selectMethod(this,'card')"><span>💳</span> Back to Card <span class="mm-tag">Instant</span></div>
+        <div class="mm-item" onclick="selectMethod(this,'bank')"><span>🏦</span> Bank Wire <span class="mm-tag">1-3 days</span></div>
+        <div class="mm-item" onclick="selectMethod(this,'crypto')"><span>₿</span> Crypto <span class="mm-tag">~10 min</span></div>
+      </div>
+      <div class="field-group">
+        <label class="field-label">Amount (USD)</label>
+        <input class="field-input" type="number" id="wth-amount" value="1000" min="10">
+      </div>
+      <div class="quick-amounts">
+        <button onclick="setAmt('wth-amount',500)">$500</button>
+        <button onclick="setAmt('wth-amount',1000)">$1,000</button>
+        <button onclick="setAmt('wth-amount',2500)">$2,500</button>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-outline" onclick="closeModal('withdrawModal')">Cancel</button>
+      <button class="btn-primary" onclick="doWithdraw()">Request Withdrawal</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast">
+  <div class="toast-icon" id="toastIcon"></div>
+  <div>
+    <div class="toast-title" id="toastTitle"></div>
+    <div class="toast-msg" id="toastMsg"></div>
+  </div>
+</div>
+
+<!-- LOADER -->
+<div class="page-loader" id="pageLoader">
+  <div class="loader-logo">
+    <div class="logo-mark lg">N</div>
+    <div class="loader-name">NexTrade</div>
+  </div>
+  <div class="loader-bar"><div class="loader-fill" id="loaderFill"></div></div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script src="assets/api.js"></script>
+<script src="assets/app.js"></script>
+</body>
+</html>
